@@ -12,10 +12,10 @@ Register: https://earn.snoonaut.xyz?ref=SNOOTDG25VP
 
 ## INSTALLATION
 ```
-git clone 
+git clone https://github.com/19seniman/reddit-snoonaut.git
 ```
 ```
-cd 
+cd reddit-snoonaut
 ```
 ```
 npm install
