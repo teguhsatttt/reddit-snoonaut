@@ -165,14 +165,15 @@ const main = async () => {
   for (const cookie of cookies) {
     await processAccount(cookie);
   }
-
-  logger.success('✅ Semua akun selesai diproses');
 };
 
 main()
+  .then(() => {
+    logger.success('✅ Semua akun selesai diproses');
+  })
   .catch(err => {
     logger.error(`❌ Error utama: ${err.message}`);
   })
   .finally(() => {
-    process.exit(0); // <<=== Penting untuk tutup proses dan ubah status workflow jadi hijau
+    process.exit(0);
   });
