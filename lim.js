@@ -163,6 +163,7 @@ const main = async () => {
     await processAccount(cookie);
   }
   logger.success('✅ Semua akun selesai diproses');
+  sendTelegram('✅ Semua akun selesai diproses');
 };
 
 main().catch((e) => logger.error(`❌ Uncaught error: ${e.message}`));
