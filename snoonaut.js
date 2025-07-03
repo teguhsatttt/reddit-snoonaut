@@ -167,11 +167,13 @@ const main = async () => {
 
 main()
   .then(() => {
-    logger.success('✅ Semua akun selesai diproses');
-     await sendTelegram('✅ Semua akun selesai diproses');
+    const message = '✅ Semua akun selesai diproses';
+    logger.success(message);
+    sendTelegram(message); // Kirim notifikasi ke Telegram
   })
   .catch(err => {
     logger.error(`❌ Error utama: ${err.message}`);
+    sendTelegram(`❌ Error utama: ${err.message}`);
   })
   .finally(() => {
     process.exit(0);
