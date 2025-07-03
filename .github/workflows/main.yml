@@ -40,4 +40,5 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           COOKIE_1: ${{ secrets.COOKIE_1 }}
           COOKIE_2: ${{ secrets.COOKIE_2 }}
-        run: node lim.js
+        run: node snoonaut.js
+         
