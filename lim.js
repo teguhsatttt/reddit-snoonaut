@@ -122,7 +122,6 @@ const completeTask = async (axiosInstance, task) => {
     return;
   }
   logger.loading(`Completing task ${task.title} (${task.id})...`);
-  sendTelegram(`[⟳] Completing task ${task.title} (${task.id})...`);
   try {
     const payload = { taskId: task.id, action: 'complete' };
     if (["Spread the Snoot!", "Like, Retweet and Comment"].includes(task.title)) {
