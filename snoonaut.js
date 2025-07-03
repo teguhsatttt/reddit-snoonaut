@@ -111,7 +111,6 @@ const completeTask = async (axiosInstance, task) => {
   }
 
   logger.loading(`Completing task ${task.title} (${task.id})...`);
-  await sendTelegram(`[⟳] Completing task ${task.title} (${task.id})...`);
   try {
     const payload = { taskId: task.id, action: 'complete' };
     if (["Spread the Snoot!", "Like, Retweet and Comment"].includes(task.title)) {
@@ -132,7 +131,6 @@ const completeTask = async (axiosInstance, task) => {
     }
   } catch (e) {
     logger.error(`Failed to complete task ${task.title}`);
-    await sendTelegram(`❌ Gagal selesaikan task: ${task.title}`);
   }
 };
 
@@ -170,6 +168,7 @@ const main = async () => {
 main()
   .then(() => {
     logger.success('✅ Semua akun selesai diproses');
+    await sendTelegram('✅ Semua akun selesai diproses');
   })
   .catch(err => {
     logger.error(`❌ Error utama: ${err.message}`);
