@@ -1,46 +1,37 @@
 require('dotenv').config();
 const axios = require('axios');
-const { HttpsProxyAgent } = require('https-proxy-agent');
 const fs = require('fs');
-const https = require('https');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
-// ----------------- LOGGER + WARNA -----------------
-const colors = {
-  reset: "\x1b[0m",
-  cyan: "\x1b[36m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
-  red: "\x1b[31m",
-  white: "\x1b[37m",
-  bold: "\x1b[1m"
+// Logger
+const logger = {
+  info: (msg) => console.log(`[i] ${msg}`),
+  warn: (msg) => console.log(`[!] ${msg}`),
+  error: (msg) => console.log(`[x] ${msg}`),
+  success: (msg) => console.log(`[✓] ${msg}`),
+  loading: (msg) => console.log(`[⟳] ${msg}`),
+  step: (msg) => console.log(`[➤] ${msg}`),
+  banner: () => console.log(`\n--- Snoonaut Auto Bot ---\n`)
 };
 
-const logger = {
-  info: (msg) => console.log(`${colors.green}[✓] ${msg}${colors.reset}`),
-  warn: (msg) => console.log(`${colors.yellow}[⚠] ${msg}${colors.reset}`),
-  error: (msg) => console.log(`${colors.red}[✗] ${msg}${colors.reset}`),
-  success: (msg) => console.log(`${colors.green}[✅] ${msg}${colors.reset}`),
-  loading: (msg) => console.log(`${colors.cyan}[⟳] ${msg}${colors.reset}`),
-  step: (msg) => console.log(`${colors.white}[➤] ${msg}${colors.reset}`),
-  banner: () => {
-    console.log(`${colors.cyan}${colors.bold}`);
-    console.log('-----------------------------------------------');
-    console.log('   🤖 Snoonaut Auto Bot - lim.js  ');
-    console.log('-----------------------------------------------');
-    console.log(`${colors.reset}`);
+// Send Telegram
+const TOKEN = process.env.TELEGRAM_TOKEN;
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const sendTelegram = async (msg) => {
+  if (!TOKEN || !CHAT_ID) return;
+  try {
+    await axios.get(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+      params: {
+        chat_id: CHAT_ID,
+        text: msg
+      }
+    });
+  } catch (e) {
+    logger.warn(`Gagal kirim Telegram: ${e.message}`);
   }
 };
 
-// ----------------- TELEGRAM -----------------
-const TOKEN = process.env.TELEGRAM_TOKEN;
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const sendTelegram = (msg) => {
-  if (!TOKEN || !CHAT_ID) return;
-  const url = `https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`;
-  https.get(url, res => {}).on('error', () => {});
-};
-
-// ----------------- RANDOM TOOLS -----------------
+// Utility
 const randomUA = () => {
   const uas = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64)...',
@@ -50,60 +41,57 @@ const randomUA = () => {
 };
 
 const generateProofUrl = () => {
-  const users = ['snootlover', 'airdropking'];
-  const id = Math.floor(1e18 + Math.random() * 9e18);
-  return `https://x.com/${users[Math.floor(Math.random() * users.length)]}/status/${id}`;
-};
-
-// ----------------- COOKIE & AXIOS -----------------
-const loadCookies = () => {
-  const cookies = [];
-  Object.keys(process.env).forEach((key) => {
-    if (key.startsWith('COOKIE_')) {
-      cookies.push(process.env[key]);
-    }
-  });
-  return cookies;
+  const usernames = ['airdropking', 'snootlover'];
+  const statusId = Math.floor(1000000000000000000 + Math.random() * 999999999999999999);
+  return `https://x.com/${usernames[Math.floor(Math.random() * usernames.length)]}/status/${statusId}`;
 };
 
 const getProxyAgent = () => {
   if (fs.existsSync('proxies.txt')) {
-    const proxies = fs.readFileSync('proxies.txt', 'utf-8').split('\n').filter(Boolean);
-    const proxy = proxies[Math.floor(Math.random() * proxies.length)];
-    return new HttpsProxyAgent(proxy.includes('http') ? proxy : `http://${proxy}`);
+    const proxies = fs.readFileSync('proxies.txt', 'utf8').split('\n').filter(Boolean);
+    if (proxies.length > 0) {
+      const proxy = proxies[Math.floor(Math.random() * proxies.length)];
+      return new HttpsProxyAgent(proxy.includes('http') ? proxy : `http://${proxy}`);
+    }
   }
   return null;
 };
 
-const createAxiosInstance = (cookie) => axios.create({
-  baseURL: 'https://earn.snoonaut.xyz/api',
-  headers: {
-    'cookie': cookie,
-    'User-Agent': randomUA(),
-    'Referer': 'https://earn.snoonaut.xyz/home'
-  }
-});
+const loadCookies = () => {
+  return Object.entries(process.env)
+    .filter(([k]) => k.startsWith('COOKIE_'))
+    .map(([_, v]) => v);
+};
 
-// ----------------- API CALLS -----------------
+const createAxiosInstance = (cookie) =>
+  axios.create({
+    baseURL: 'https://earn.snoonaut.xyz/api',
+    headers: {
+      cookie,
+      'User-Agent': randomUA(),
+      Referer: 'https://earn.snoonaut.xyz/home'
+    }
+  });
+
 const fetchUserInfo = async (axiosInstance) => {
   logger.loading('Fetching user info...');
-  sendTelegram('[⟳] Fetching user info...');
   try {
-    const res = await axiosInstance.get('/user/stats', { httpsAgent: getProxyAgent() });
+    const res = await axiosInstance.get('/user/stats', {
+      httpsAgent: getProxyAgent()
+    });
+    const { username, snootBalance } = res.data.user;
     logger.success('User info fetched successfully');
-    logger.info(`Username: ${res.data.user.username}, Snoot Balance: ${res.data.user.snootBalance}`);
-    sendTelegram(`[✅] User info OK\n[✓] Username: ${res.data.user.username}, Balance: ${res.data.user.snootBalance}`);
-    return res.data;
+    logger.info(`Username: ${username}, Snoot Balance: ${snootBalance}`);
+    await sendTelegram(`[✓] Username: ${username}, Snoot Balance: ${snootBalance}`);
+    return res.data.user;
   } catch (e) {
     logger.error('Failed to fetch user info');
-    sendTelegram('❌ Gagal fetch user info');
     return null;
   }
 };
 
 const fetchTasks = async (axiosInstance, type) => {
   logger.loading(`Fetching ${type} tasks...`);
-  sendTelegram(`[⟳] Fetching ${type} tasks...`);
   try {
     const res = await axiosInstance.get(`/tasks?type=${type}`, {
       httpsAgent: getProxyAgent()
@@ -121,49 +109,70 @@ const completeTask = async (axiosInstance, task) => {
     logger.loading(`Skipping referral task ${task.title} (${task.id})`);
     return;
   }
+
   logger.loading(`Completing task ${task.title} (${task.id})...`);
+  await sendTelegram(`[⟳] Completing task ${task.title} (${task.id})...`);
   try {
     const payload = { taskId: task.id, action: 'complete' };
     if (["Spread the Snoot!", "Like, Retweet and Comment"].includes(task.title)) {
       payload.proofUrl = generateProofUrl();
     }
+
     const res = await axiosInstance.post('/tasks/complete', payload, {
       httpsAgent: getProxyAgent(),
-      headers: { 'User-Agent': randomUA(), 'content-type': 'application/json' }
+      headers: {
+        'User-Agent': randomUA(),
+        'content-type': 'application/json'
+      }
     });
+
     if (res.data.success) {
       logger.success(`Task ${task.title} completed, Reward: ${res.data.reward}`);
-      sendTelegram(`[✅] Task ${task.title} selesai! 🎁 Reward: ${res.data.reward}`);
+      await sendTelegram(`[✅] Task ${task.title} selesai! 🎁 Reward: ${res.data.reward}`);
     }
   } catch (e) {
     logger.error(`Failed to complete task ${task.title}`);
+    await sendTelegram(`❌ Gagal selesaikan task: ${task.title}`);
   }
 };
 
 const processAccount = async (cookie) => {
-  logger.step(`Processing account: ${cookie.slice(0, 20)}...`);
+  logger.step(`Processing account: ${cookie.slice(0, 30)}...`);
   const axiosInstance = createAxiosInstance(cookie);
+
   const userInfo = await fetchUserInfo(axiosInstance);
   if (!userInfo) return;
+
   const engagementTasks = await fetchTasks(axiosInstance, 'engagement');
   const referralTasks = await fetchTasks(axiosInstance, 'referral');
-  const tasks = [...engagementTasks, ...referralTasks].filter(task => task.status === 'pending');
-  for (const task of tasks) {
+  const allTasks = [...engagementTasks, ...referralTasks].filter(t => t.status === 'pending');
+
+  for (const task of allTasks) {
     await completeTask(axiosInstance, task);
   }
-  logger.success('✅ Semua task selesai untuk akun ini');
+
+  logger.success('All tasks processed');
 };
 
-// ----------------- MAIN -----------------
 const main = async () => {
   logger.banner();
   const cookies = loadCookies();
-  if (cookies.length === 0) return logger.error('No cookies found');
+  if (cookies.length === 0) {
+    logger.error('Tidak ada COOKIE ditemukan.');
+    return;
+  }
+
   for (const cookie of cookies) {
     await processAccount(cookie);
   }
+
   logger.success('✅ Semua akun selesai diproses');
-  sendTelegram('✅ Semua akun selesai diproses');
 };
 
-main().catch((e) => logger.error(`❌ Uncaught error: ${e.message}`));
+main()
+  .catch(err => {
+    logger.error(`❌ Error utama: ${err.message}`);
+  })
+  .finally(() => {
+    process.exit(0); // <<=== Penting untuk tutup proses dan ubah status workflow jadi hijau
+  });
