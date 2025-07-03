@@ -117,7 +117,10 @@ const fetchTasks = async (axiosInstance, type) => {
 };
 
 const completeTask = async (axiosInstance, task) => {
-  if (task.type === 'referral') return; // skip notif for referral
+  if (task.type === 'referral') {
+    logger.loading(`Skipping referral task ${task.title} (${task.id})`);
+    return;
+  }
   logger.loading(`Completing task ${task.title} (${task.id})...`);
   sendTelegram(`[⟳] Completing task ${task.title} (${task.id})...`);
   try {
@@ -135,7 +138,6 @@ const completeTask = async (axiosInstance, task) => {
     }
   } catch (e) {
     logger.error(`Failed to complete task ${task.title}`);
-    sendTelegram(`❌ Gagal selesaikan task: ${task.title}`);
   }
 };
 
