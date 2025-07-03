@@ -2,7 +2,7 @@
 
 SNOONAUT AIRDROP GET $SNOOT TOKEN
 
-Register: https://earn.snoonaut.xyz?ref=SNOOTDG25VP
+Register: https://earn.snoonaut.xyz
 
 ~ login Reddit Account ( web  eror ? use vpn) 
 
@@ -14,7 +14,7 @@ Register: https://earn.snoonaut.xyz?ref=SNOOTDG25VP
 
 ## INSTALLATION
 ```
-git clone https://github.com/19seniman/reddit-snoonaut.git
+git clone https://github.com/teguhsatttt/reddit-snoonaut.git
 ```
 ```
 cd reddit-snoonaut
