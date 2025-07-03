@@ -27,5 +27,5 @@ nano .env
 ```
 ~ Run The Script
 ```
-node lim.js
+node snoonaut.js
 ```
