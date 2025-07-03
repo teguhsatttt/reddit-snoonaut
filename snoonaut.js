@@ -168,7 +168,7 @@ const main = async () => {
 main()
   .then(() => {
     logger.success('✅ Semua akun selesai diproses');
-    sendTelegram('✅ Semua akun selesai diproses');
+     await sendTelegram('✅ Semua akun selesai diproses');
   })
   .catch(err => {
     logger.error(`❌ Error utama: ${err.message}`);
