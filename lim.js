@@ -122,14 +122,22 @@ const fetchTasks = async (axiosInstance, type) => {
   }
 };
 
-const completeTask = async (axiosInstance, task) => {
+const completeTask = async (axiosInstance, task, type = 'engagement') => {
   logger.loading(`Completing task ${task.title} (${task.id})...`);
-  sendTelegram(`[⟳] Completing task ${task.title} (${task.id})...`);
+  
+  // Hanya kirim notifikasi Telegram untuk task engagement
+  if (type === 'engagement') {
+    sendTelegram(`[⟳] Completing task ${task.title} (${task.id})...`);
+  }
+
   try {
     const payload = { taskId: task.id, action: 'complete' };
+    
+    // Tambahkan proofUrl jika task jenis tertentu
     if (['Spread the Snoot!', 'Like, Retweet and Comment'].includes(task.title)) {
       payload.proofUrl = generateProofUrl();
     }
+
     const res = await axiosInstance.post('/tasks/complete', payload, {
       httpsAgent: getProxyAgent(),
       headers: {
@@ -137,28 +145,19 @@ const completeTask = async (axiosInstance, task) => {
         'content-type': 'application/json',
       }
     });
+
     if (res.data.success) {
       logger.success(`Task ${task.title} completed, Reward: ${res.data.reward}`);
-      sendTelegram(`[✅] Task ${task.title} selesai! 🎁 Reward: ${res.data.reward}`);
+      if (type === 'engagement') {
+        sendTelegram(`[✅] Task ${task.title} selesai! 🎁 Reward: ${res.data.reward}`);
+      }
     }
   } catch (e) {
     logger.error(`Failed to complete task ${task.title} (${task.id})`);
-    sendTelegram(`❌ Gagal selesaikan ${task.title}: ${e.message}`);
+    if (type === 'engagement') {
+      sendTelegram(`❌ Gagal selesaikan ${task.title}: ${e.message}`);
+    }
   }
-};
-
-const processAccount = async (cookie) => {
-  logger.step(`Processing account: ${cookie.slice(0, 20)}...`);
-  const axiosInstance = createAxiosInstance(cookie);
-  const userInfo = await fetchUserInfo(axiosInstance);
-  if (!userInfo) return;
-  const engagementTasks = await fetchTasks(axiosInstance, 'engagement');
-  const referralTasks = await fetchTasks(axiosInstance, 'referral');
-  const allTasks = [...engagementTasks, ...referralTasks].filter(task => task.status === 'pending');
-  for (const task of allTasks) {
-    await completeTask(axiosInstance, task);
-  }
-  logger.success('All tasks processed');
 };
 
 const main = async () => {
