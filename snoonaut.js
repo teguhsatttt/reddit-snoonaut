@@ -82,7 +82,7 @@ const fetchUserInfo = async (axiosInstance) => {
     const { username, snootBalance } = res.data.user;
     logger.success('User info fetched successfully');
     logger.info(`Username: ${username}, Snoot Balance: ${snootBalance}`);
-    await sendTelegram(`[✓] Username: ${username}, Snoot Balance: ${snootBalance}`);
+    await sendTelegram(`[✅] Username: ${username}, Snoot Balance: ${snootBalance}`);
     return res.data.user;
   } catch (e) {
     logger.error('Failed to fetch user info');
@@ -169,7 +169,7 @@ main()
   .then(() => {
     const message = '✅ Semua akun selesai diproses';
     logger.success(message);
-    sendTelegram(message); // Kirim notifikasi ke Telegram
+    sendTelegram('✅ Semua akun selesai diproses'); // Kirim notifikasi ke Telegram
   })
   .catch(err => {
     logger.error(`❌ Error utama: ${err.message}`);
